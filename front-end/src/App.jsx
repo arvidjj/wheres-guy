@@ -10,8 +10,7 @@ function App() {
   return (
     <>
       <div>
-        <a href="https://vitejs.dev" target="_blank" style={{display:'flex', flexDirection:'row'}}> 
-          <img src={viteLogo} className="logo" alt="Vite logo" />
+        <a href="" target="_blank" style={{display:'flex', flexDirection:'row'}}> 
           <h1>Where's this guy</h1>
         </a>
       </div>

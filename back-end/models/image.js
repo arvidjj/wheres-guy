@@ -1,37 +1,28 @@
 const mongoose = require('mongoose');
 
-const imageSchema = new mongoose.Schema({
+
+
+const Schema = mongoose.Schema;
+
+
+const imageSchema = new Schema({
     image: {
         type: String,
         required: true
     },
     clickLocation: {
-        type: {
-            x: {
-                type: Number,
-                required: true
-            },
-            y: {
-                type: Number,
-                required: true
-            }
-        },
+        type: Schema.Types.ObjectId,
+        ref: 'ClickLocation',
         required: true
     },
     hitboxSize: {
-        type: {
-            width: {
-                type: Number,
-                required: true
-            },
-            height: {
-                type: Number,
-                required: true
-            }
-        },
+        type: Schema.Types.ObjectId,
+        ref: 'Hitbox',
         required: true
     }
 });
+
+
 
 const Image = mongoose.model('Image', imageSchema);
 

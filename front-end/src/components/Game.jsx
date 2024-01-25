@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import firstTest from '../assets/firstTest.jpeg';
+import React, { useState, useEffect } from 'react';
+import apiInstance from '../../apiInstance';
 
 const Game = () => {
-    const [correctPosition, setCorrectPosition] = useState({ x: 100, y: 500 });
+    const [correctPosition, setCorrectPosition] = useState({ x: 500, y: 500 });
     const [clickPosition, setClickPosition] = useState(null);
     const [timesClicked, setTimesClicked] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
@@ -47,6 +47,26 @@ const Game = () => {
         setClickPosition(null);
     };
 
+    useEffect(() => {
+        const fetchImage = async () => {
+            try {
+                const response = await apiInstance.get('/images');
+                if (response.status === 200) {
+                    const imageUrl = URL.createObjectURL(new Blob([response.data]));
+                    setImageSrc(imageUrl);
+                } else {
+                    console.error('Failed to fetch image from the backend');
+                }
+            } catch (error) {
+                console.error('Error fetching image:', error);
+            }
+        };
+
+        fetchImage();
+    }, []);
+
+    const [imageSrc, setImageSrc] = useState(null);
+
     return (
         <div className="game-container">
             <h1>Where's Waldo?</h1>
@@ -54,7 +74,7 @@ const Game = () => {
 
             <div>
                 <img
-                    src={firstTest}
+                    src={imageSrc}
                     alt="Where's Waldo"
                     onClick={handleClick}
                     className={hasWon ? 'won mainimage' : 'mainimage'}
