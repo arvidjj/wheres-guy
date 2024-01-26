@@ -5,6 +5,7 @@ const multer = require('multer');
 const sharp = require('sharp'); // Import sharp
 const fs = require('fs');
 const Image = require('../models/image');
+const mongoose = require('mongoose');
 
 
 const storage = multer.memoryStorage();
@@ -21,28 +22,36 @@ router.get('/', async function (req, res, next) {
   }
 });
 
+router.get('/random', async (req, res) => {
+  try {
+    const randomImage = await Image.aggregate([{ $sample: { size: 1 } }]);
+    if (!randomImage || randomImage.length === 0) {
+      return res.status(404).json({ error: 'No random image found' });
+    }
+    res.json(randomImage[0]);
+  } catch (error) {
+    console.error('Error getting random image:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.get('/:id', async function (req, res, next) {
   //get image by id
   const imageId = req.params.id;
   try {
+    if (!mongoose.Types.ObjectId.isValid(imageId)) {
+      return res.status(400).json({ error: 'Invalid image ID' });
+    }
+
     const image = await Image.findById(imageId);
     if (!image) {
       return res.status(404).json({ error: 'Image not found' });
     }
     res.json(image);
   } catch (error) {
+    console.error('Error fetching image by ID:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
-
-router.get('/random', function (req, res, next) {
-  //get random image
-  Image.findRandom(function (err, image) {
-    if (err) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-    res.json(image);
-  });
 });
 
 // Define the route for uploading images
@@ -60,7 +69,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
     //format the name so there are no spaces and give it a unique name
     const imageName = req.file.originalname.replace(/\s/g, '');
-    
+
     //get from the post request the data
     const clickLocation = JSON.parse(req.body.clickLocation);
     const hitboxSize = JSON.parse(req.body.hitboxSize);

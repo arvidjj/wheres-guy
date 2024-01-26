@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import apiInstance from '../../apiInstance';
+import API_CONFIG from '../../apiConfig';
 
 const Game = () => {
     const [correctPosition, setCorrectPosition] = useState({ x: 500, y: 500 });
+
     const [clickPosition, setClickPosition] = useState(null);
+    
+    const [hitboxSize, setHitboxSize] = useState({ width: 0, height: 0 });
+
     const [timesClicked, setTimesClicked] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
     const [hasWon, setHasWon] = useState(false);
 
     const createClickBox = () => {
         const { x, y } = correctPosition;
-        const boxSize = 20; // Adjust the size of the clickable box
         return (
             <div
                 style={{
                     position: 'relative',
-                    left: (x - boxSize / 2),
-                    top: -(y - boxSize / 2),
-                    width: boxSize,
-                    height: boxSize,
+                    left: (x - hitboxSize.width / 2),
+                    top: -(y - hitboxSize.height / 2),
+                    width: hitboxSize.width,
+                    height: hitboxSize.height,
                     backgroundColor: 'rgba(255, 0, 0, 0.3)', // Semi-transparent red
                 }}
                 onClick={() => handleCorrectClick()}
@@ -50,10 +54,13 @@ const Game = () => {
     useEffect(() => {
         const fetchImage = async () => {
             try {
-                const response = await apiInstance.get('/images');
+                const response = await apiInstance.get('/images/random');
+                
                 if (response.status === 200) {
-                    const imageUrl = URL.createObjectURL(new Blob([response.data]));
+                    const imageUrl = API_CONFIG.baseURL + '/images/' + response.data.image;
                     setImageSrc(imageUrl);
+                    setCorrectPosition(response.data.clickLocation);
+                    setHitboxSize(response.data.hitboxSize);
                 } else {
                     console.error('Failed to fetch image from the backend');
                 }
