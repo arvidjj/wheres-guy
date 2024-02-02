@@ -7,7 +7,11 @@ const imageSchema = new Schema({
         type: String,
         required: true
     },
-    clickLocation: {
+    character: [{
+        type: String,
+        required: true
+    }],
+    clickLocation: [{
         x: {
             type: Number,
             required: true
@@ -16,8 +20,8 @@ const imageSchema = new Schema({
             type: Number,
             required: true
         }
-    },
-    hitboxSize: {
+    }],
+    hitboxSize: [{
         width: {
             type: Number,
             required: true
@@ -26,7 +30,7 @@ const imageSchema = new Schema({
             type: Number,
             required: true
         }
-    }
+    }]
 });
 //get random
 imageSchema.statics.findRandom = function (callback) {

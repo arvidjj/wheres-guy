@@ -3,63 +3,33 @@ import apiInstance from '../../apiInstance';
 import API_CONFIG from '../../apiConfig';
 
 const Game = () => {
-    const [correctPosition, setCorrectPosition] = useState({ x: 500, y: 500 });
 
-    const [clickPosition, setClickPosition] = useState(null);
-    
-    const [hitboxSize, setHitboxSize] = useState({ width: 0, height: 0 });
+    const [imageSrc, setImageSrc] = useState(null);
+    const [imageId, setImageId] = useState(null);
+    const [shouldRenderClickBoxes, setShouldRenderClickBoxes] = useState(false);
 
+    const [characters, setCharacters] = useState([]);
+    const [clickLocation, setClickLocation] = useState([]);
+    const [hitboxSize, setHitboxSize] = useState([]);
+
+    const [clickBoxes, setClickBoxes] = useState([]);
+
+    const [lastClicked, setLastClicked] = useState(null);
     const [timesClicked, setTimesClicked] = useState(0);
     const [hasStarted, setHasStarted] = useState(false);
     const [hasWon, setHasWon] = useState(false);
-
-    const createClickBox = () => {
-        const { x, y } = correctPosition;
-        return (
-            <div
-                style={{
-                    position: 'relative',
-                    left: (x - hitboxSize.width / 2),
-                    top: -(y - hitboxSize.height / 2),
-                    width: hitboxSize.width,
-                    height: hitboxSize.height,
-                    backgroundColor: 'rgba(255, 0, 0, 0.3)', // Semi-transparent red
-                }}
-                onClick={() => handleCorrectClick()}
-            />
-        );
-    }
-
-    const handleCorrectClick = () => {
-        setTimesClicked(timesClicked + 1);
-        setHasWon(true);
-    };
-
-    const handleClick = (event) => {
-        const { offsetX, offsetY } = event.nativeEvent;
-        if (!hasStarted) {
-            setHasStarted(true);
-        }
-        setTimesClicked(timesClicked + 1);
-        setClickPosition({ x: offsetX, y: offsetY });
-    };
-
-    const resetGame = () => {
-        setHasWon(false);
-        setHasStarted(false);
-        setTimesClicked(0);
-        setClickPosition(null);
-    };
 
     useEffect(() => {
         const fetchImage = async () => {
             try {
                 const response = await apiInstance.get('/images/random');
-                
+
                 if (response.status === 200) {
                     const imageUrl = API_CONFIG.baseURL + '/images/' + response.data.image;
+                    setImageId(response.data['_id']);
                     setImageSrc(imageUrl);
-                    setCorrectPosition(response.data.clickLocation);
+                    setCharacters(response.data.character);
+                    setClickLocation(response.data.clickLocation);
                     setHitboxSize(response.data.hitboxSize);
                 } else {
                     console.error('Failed to fetch image from the backend');
@@ -72,27 +42,94 @@ const Game = () => {
         fetchImage();
     }, []);
 
-    const [imageSrc, setImageSrc] = useState(null);
+    const createClickBox = (position, character) => {
+
+        return (
+            <div
+                key={`${position.x}-${position.y}`}
+                id={`${position.x}-${position.y}`}
+                style={{
+                    position: 'absolute',
+                    left: position.x - 25,
+                    top: position.y - 25,
+                    width: 50,
+                    height: 50,
+                    border: '2px solid blue',
+                    boxSizing: 'border-box',
+                }}
+            >
+                <div key={`${position.x}-${position.y}`}>
+                    <select onChange={(event) => handleCharacterSelection({ x: position.x, y: position.y }, event.target.value)}>
+                        <option value={null}>Select a Character</option>
+                        {characters.map((char) => (
+                            <option key={char} value={char}>
+                                {char}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        );
+    };
+
+    const handleCharacterSelection = (coordinates, character) => {
+        const [x, y] = [coordinates.x, coordinates.y];
+        const hitboxSize = { height: 50, width: 50 };
+
+        const hitData = {
+            character: JSON.stringify(character),
+            clickLocation: JSON.stringify(coordinates),
+            hitboxSize: JSON.stringify(hitboxSize),
+            imageId: imageId,
+        };
+
+        apiInstance.post('/validate', hitData)
+            .then(response => {
+                console.log(response.data.message); // Success message
+            })
+            .catch(error => {
+                console.error(error.response.data.error); // Error message
+            });
+    }
+
+    const handleClick = (event) => {
+        const { offsetX, offsetY } = event.nativeEvent;
+        if (!hasStarted) {
+            setHasStarted(true);
+        }
+        const newClickBox = createClickBox({ x: offsetX, y: offsetY });
+
+        if (!(clickBoxes.length > characters.length)) {
+            setClickBoxes((prevClickBoxes) => [...prevClickBoxes, newClickBox]);
+        }
+
+        setTimesClicked((prevTimesClicked) => prevTimesClicked + 1);
+    };
+
+
+    const resetGame = () => {
+        setHasWon(false);
+        setHasStarted(false);
+        setTimesClicked(0);
+        setClickBoxes([]);
+    };
 
     return (
         <div className="game-container">
-            <h1>Where's Waldo?</h1>
-            {hasStarted && <nav>Times clicked: {timesClicked}</nav>}
+            <h1>Find the Character!</h1>
 
-            <div>
+            <div style={{ position: 'relative' }} id="imageDiv">
                 <img
                     src={imageSrc}
-                    alt="Where's Waldo"
+                    alt="Find the Character"
                     onClick={handleClick}
                     className={hasWon ? 'won mainimage' : 'mainimage'}
                 />
-                {hasStarted && createClickBox()} {/* Show the click box only when the game has started */}
+                {clickBoxes.map((clickBox) => clickBox)}
             </div>
 
-
-            {hasWon && (
+            {hasStarted && (
                 <div>
-                    <p>Congratulations! You found Waldo!</p>
                     <button onClick={resetGame}>Play Again</button>
                 </div>
             )}

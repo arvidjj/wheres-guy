@@ -71,11 +71,13 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     const imageName = req.file.originalname.replace(/\s/g, '');
 
     //get from the post request the data
+    const character = JSON.parse(req.body.character);
     const clickLocation = JSON.parse(req.body.clickLocation);
     const hitboxSize = JSON.parse(req.body.hitboxSize);
 
     const image = new Image({
       image: imageName,
+      character: character,
       clickLocation: clickLocation,
       hitboxSize: hitboxSize
     })
