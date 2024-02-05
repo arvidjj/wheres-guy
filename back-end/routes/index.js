@@ -5,16 +5,19 @@ var mongoose = require('mongoose');
 
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   res.json('good');
 });
 
-router.post('/validate', async function(req, res, next) {
+router.post('/validate', async function (req, res, next) {
   const character = JSON.parse(req.body.character);
   const clickLocation = JSON.parse(req.body.clickLocation);
   const hitboxSize = JSON.parse(req.body.hitboxSize);
   const imageId = req.body.imageId;
   const image = await Image.findById(imageId);
+
+  let hasDoneIt = false;
+
   if (!image) {
     return res.status(404).json({ error: 'Image not found' });
   }
@@ -30,16 +33,36 @@ router.post('/validate', async function(req, res, next) {
     return res.status(400).json({ error: 'Click location is out of bounds' });
   }
 
+  console.log("x: " + clickLocation.x + ", y: " + clickLocation.y);
+  console.log(image.clickLocation);
+
   image.clickLocation.forEach((location, index) => {
-    if (location.x === clickLocation.x && location.y === clickLocation.y) {
-      return res.json({ message: 'Correct!' });
+    if (isPointInside(clickLocation.x, clickLocation.y, location.x, location.y, hitboxSize.width, hitboxSize.height)) {
+      if (image.character[index] === character) {
+        hasDoneIt = true;
+        return res.json({ message: 'true', character: character});
+      } else {
+        console.log("This is not the correct character!")
+      }
     }
   })
 
-  return res.json({ message: 'Incorrect location :(' });
+  if (hasDoneIt) return;
+
+  return res.json({ message: 'false' });
 
 });
-  
 
+function isPointInside(x, y, centerX, centerY, width, height) {
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+
+  const minX = centerX - halfWidth;
+  const maxX = centerX + halfWidth;
+  const minY = centerY - halfHeight;
+  const maxY = centerY + halfHeight;
+
+  return x >= minX && x <= maxX && y >= minY && y <= maxY;
+}
 
 module.exports = router;
