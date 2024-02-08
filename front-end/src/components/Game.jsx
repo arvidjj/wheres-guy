@@ -22,28 +22,7 @@ const Game = () => {
     const [newsFeedText, setNewsFeedText] = useState('');
     const [guessedCharacters, setGuessedCharacters] = useState([]);
 
-    useEffect(() => {
-        const fetchImage = async () => {
-            try {
-                const response = await apiInstance.get('/images/random');
-
-                if (response.status === 200) {
-                    const imageUrl = API_CONFIG.baseURL + '/images/' + response.data.image;
-                    setImageId(response.data['_id']);
-                    setImageSrc(imageUrl);
-                    setCharacters(response.data.character);
-                    setClickLocation(response.data.clickLocation);
-                    setHitboxSize(response.data.hitboxSize);
-                } else {
-                    console.error('Failed to fetch image from the backend');
-                }
-            } catch (error) {
-                console.error('Error fetching image:', error);
-            }
-        };
-
-        fetchImage();
-    }, []);
+    const [sessionScoreId, setSessionScoreId] = useState('');
 
     const createClickBox = (position, character) => {
 
@@ -83,6 +62,7 @@ const Game = () => {
             character: JSON.stringify(character),
             clickLocation: JSON.stringify(coordinates),
             hitboxSize: JSON.stringify(hitboxSize),
+            sessionScoreId: JSON.stringify(sessionScoreId),
             imageId: imageId,
         };
 
@@ -110,15 +90,13 @@ const Game = () => {
                     const newGuessSquare = <div
                         key={`${x}-${y}`}
                         id={`${x}-${y}`}
+                        className='guessedBox'
                         style={{
-                            position: 'absolute',
                             left: x - 25,
                             top: y - 25,
                             width: 50,
                             height: 50,
-                            border: '2px solid green',
-                            boxSizing: 'border-box',
-                        }} > {guessedChar[0]} </div>;
+                        }}> {guessedChar[0]} </div>;
                     setGuessedSquares([...guessedSquares, newGuessSquare]);
 
                     if (guessedCharacters.length === characters.length - 1) {
@@ -158,13 +136,42 @@ const Game = () => {
 
     const resetGame = () => {
         setHasWon(false);
-        setHasStarted(false);
+        setHasStarted(true);
         setTimesClicked(0);
         setClickBox(null);
         setNewsFeedText('');
         setIsValidatingSelection(false);
         setGuessedCharacters([]);
     };
+
+    const handleStartGame = () => {
+        fetchImage();
+        resetGame();
+    }
+
+    const fetchImage = async () => {
+        try {
+            const response = await apiInstance.get('/images/random');
+
+            if (response.status === 200) {
+                console.log(response.data)
+                const imageUrl = API_CONFIG.baseURL + '/images/' + response.data.image.image;
+                setImageId(response.data.image['_id']);
+                setImageSrc(imageUrl);
+                setCharacters(response.data.image.character);
+                setClickLocation(response.data.image.clickLocation);
+                setHitboxSize(response.data.image.hitboxSize);
+                
+                setSessionScoreId(response.data.sessionId);
+            } else {
+                console.error('Failed to fetch image from the backend');
+            }
+        } catch (error) {
+            console.error('Error fetching image:', error);
+        }
+    };
+
+
 
     return (
         <div className="game-container">
@@ -176,13 +183,16 @@ const Game = () => {
                     {guessedCharacters.join(', ')}</p>
             </div>
 
+            {!hasStarted && <button onClick={handleStartGame}>Start Game</button>}
+
             <div style={{ position: 'relative' }} id="imageDiv">
-                <img
+                {hasStarted && <img
                     src={imageSrc}
                     alt="Find the Character"
                     onClick={handleClick}
                     className={hasWon ? 'won mainimage' : 'mainimage'}
-                />
+                />}
+
                 {clickBox}
                 {guessedSquares.map((square) => square)}
             </div>

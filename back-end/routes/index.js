@@ -1,8 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var Image = require('../models/image');
-var mongoose = require('mongoose');
-
+const ScoreSession = require('../models/scoresession');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -13,8 +12,11 @@ router.post('/validate', async function (req, res, next) {
   const character = JSON.parse(req.body.character);
   const clickLocation = JSON.parse(req.body.clickLocation);
   const hitboxSize = JSON.parse(req.body.hitboxSize);
+  const sessionScoreId = JSON.parse(req.body.sessionScoreId);
   const imageId = req.body.imageId;
   const image = await Image.findById(imageId);
+
+  console.log(sessionScoreId)
 
   let hasDoneIt = false;
 
@@ -33,14 +35,25 @@ router.post('/validate', async function (req, res, next) {
     return res.status(400).json({ error: 'Click location is out of bounds' });
   }
 
-  console.log("x: " + clickLocation.x + ", y: " + clickLocation.y);
-  console.log(image.clickLocation);
+  /*console.log("x: " + clickLocation.x + ", y: " + clickLocation.y);
+  console.log(image.clickLocation);*/
 
   image.clickLocation.forEach((location, index) => {
     if (isPointInside(clickLocation.x, clickLocation.y, location.x, location.y, hitboxSize.width, hitboxSize.height)) {
       if (image.character[index] === character) {
         hasDoneIt = true;
-        return res.json({ message: 'true', character: character});
+
+        // Update the score session and calculate elapsed time
+        ScoreSession.updateOne({ _id: sessionScoreId }, { $inc: { guessedCharacters: 1 } })
+          .then(() => {
+            // success
+          })
+          .catch((err) => {
+            console.error('Error updating score session:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+          });
+
+        return res.json({ message: 'true', character: character });
       } else {
         console.log("This is not the correct character!")
       }

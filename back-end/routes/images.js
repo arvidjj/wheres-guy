@@ -5,6 +5,7 @@ const multer = require('multer');
 const sharp = require('sharp'); // Import sharp
 const fs = require('fs');
 const Image = require('../models/image');
+const ScoreSession = require('../models/scoresession');
 const mongoose = require('mongoose');
 
 
@@ -28,7 +29,12 @@ router.get('/random', async (req, res) => {
     if (!randomImage || randomImage.length === 0) {
       return res.status(404).json({ error: 'No random image found' });
     }
-    res.json(randomImage[0]);
+
+    // Create a new score session for the random image
+    const newSession = await ScoreSession.create({ image: randomImage[0]._id, guessedCharacters: 0, servedAt: new Date()});
+
+    //return the image and the id of the scoresession
+    res.json({ image: randomImage[0], sessionId: newSession._id });
   } catch (error) {
     console.error('Error getting random image:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -93,5 +99,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+
 
 module.exports = router;
