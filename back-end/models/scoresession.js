@@ -19,7 +19,7 @@ const scoreSession = new Schema({
     },
     elapsedTime: {
         type: Number
-    }
+    },
 });
 
 const ScoreSession = mongoose.model('SessionScore', scoreSession);

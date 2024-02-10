@@ -12,6 +12,7 @@ router.post('/', async function (req, res, next) {
     let newUserScore = new UserScore({
         username: req.body.username,
         score: foundSession.elapsedTime,
+        servedAt: foundSession.servedAt,
         imageId: foundSession.image
     });
 
