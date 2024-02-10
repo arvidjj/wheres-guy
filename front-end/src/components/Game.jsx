@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiInstance from '../../apiInstance';
 import API_CONFIG from '../../apiConfig';
+import WinGameModal from './WinGameModal';
 
 const Game = () => {
 
@@ -23,6 +24,9 @@ const Game = () => {
     const [guessedCharacters, setGuessedCharacters] = useState([]);
 
     const [sessionScoreId, setSessionScoreId] = useState('');
+    const [finishedTime, setFinishedTime] = useState('');
+
+    const [showWinModal, setShowWinModal] = useState(false);
 
     const createClickBox = (position, character) => {
 
@@ -99,6 +103,10 @@ const Game = () => {
                         }}> {guessedChar[0]} </div>;
                     setGuessedSquares([...guessedSquares, newGuessSquare]);
 
+                    if (response.data.elapsedTime) {
+                        setFinishedTime(response.data.elapsedTime);
+                    }
+
                     if (guessedCharacters.length === characters.length - 1) {
                         handleVictory();
                     }
@@ -116,6 +124,7 @@ const Game = () => {
     const handleVictory = () => {
         setHasWon(true);
         setNewsFeedText('Congratulations! You found all the characters!');
+        setShowWinModal(true);
     }
 
     const handleClick = (event) => {
@@ -202,6 +211,17 @@ const Game = () => {
                     <button onClick={resetGame}>Play Again</button>
                 </div>
             )}
+
+            {showWinModal && (
+                <WinGameModal
+                    elapsedTime={finishedTime}
+                    onSendName={(name) => {
+                        console.log(name);
+                        setShowWinModal(false);
+                    }}
+                />
+            )}
+            
         </div>
     );
 };

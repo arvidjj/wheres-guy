@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Image = require('../models/image');
 const ScoreSession = require('../models/scoresession');
+const UserScore = require('../models/userscore');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -15,8 +16,6 @@ router.post('/validate', async function (req, res, next) {
   const sessionScoreId = JSON.parse(req.body.sessionScoreId);
   const imageId = req.body.imageId;
   const image = await Image.findById(imageId);
-
-  console.log(sessionScoreId)
 
   let hasDoneIt = false;
 
@@ -38,20 +37,31 @@ router.post('/validate', async function (req, res, next) {
   /*console.log("x: " + clickLocation.x + ", y: " + clickLocation.y);
   console.log(image.clickLocation);*/
 
-  image.clickLocation.forEach((location, index) => {
+  image.clickLocation.forEach(async (location, index) => {
     if (isPointInside(clickLocation.x, clickLocation.y, location.x, location.y, hitboxSize.width, hitboxSize.height)) {
       if (image.character[index] === character) {
         hasDoneIt = true;
 
+        // if the user has already guessed all the characters on the image
+        if (foundSession.guessedCharacters === image.character.length) {
+          return res.json({ message: 'Already finished' })
+        }
+
         // Update the score session and calculate elapsed time
-        ScoreSession.updateOne({ _id: sessionScoreId }, { $inc: { guessedCharacters: 1 } })
+         const foundSession = await ScoreSession.findOneAndUpdate({ _id: sessionScoreId }, { $inc: { guessedCharacters: 1 } }, { new: true })
           .then(() => {
-            // success
           })
           .catch((err) => {
             console.error('Error updating score session:', err);
             return res.status(500).json({ error: 'Internal server error' });
           });
+
+        //if he guessed all the characters on the image
+        if (foundSession.guessedCharacters === image.character.length) {
+          const elapsedTime = new Date() - foundSession.servedAt;
+          ScoreSession.findOneAndUpdate({ _id: sessionScoreId }, { elapsedTime: elapsedTime })
+          return res.json({ message: 'true', character: character, elapsedTime: elapsedTime });
+        }
 
         return res.json({ message: 'true', character: character });
       } else {
@@ -66,6 +76,7 @@ router.post('/validate', async function (req, res, next) {
 
 });
 
+
 function isPointInside(x, y, centerX, centerY, width, height) {
   const halfWidth = width / 2;
   const halfHeight = height / 2;
@@ -78,4 +89,14 @@ function isPointInside(x, y, centerX, centerY, width, height) {
   return x >= minX && x <= maxX && y >= minY && y <= maxY;
 }
 
+function createUserScore(username, score) {
+  const newUserScore = new UserScore({ username: username, score: score });
+  newUserScore.save((err) => {
+    if (err) {
+      console.error('Error saving user score:', err);
+    }
+  });
+}
+
 module.exports = router;
+
