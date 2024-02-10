@@ -10,6 +10,10 @@ const userScore = new Schema({
     score: {
         type: Number,
         required: true
+    },
+    imageId: {
+        type: Schema.Types.ObjectId,
+        required: true
     }
 });
 

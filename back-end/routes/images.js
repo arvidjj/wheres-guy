@@ -31,7 +31,8 @@ router.get('/random', async (req, res) => {
     }
 
     // Create a new score session for the random image
-    const newSession = await ScoreSession.create({ image: randomImage[0]._id, guessedCharacters: 0, servedAt: new Date()});
+    const newSession = await ScoreSession.create({ image: randomImage[0]._id, guessedCharacters: 0, servedAt: new Date()
+    , elapsedTime: 0});
 
     //return the image and the id of the scoresession
     res.json({ image: randomImage[0], sessionId: newSession._id });

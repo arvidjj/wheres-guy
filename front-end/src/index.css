@@ -1,3 +1,7 @@
+@tailwind base; 
+@tailwind components; 
+@tailwind utilities; 
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -52,3 +56,72 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  display:flex;
+  flex-direction: column;
+}
+
+.mainimage {
+  width: 500px;
+  height: 500px;
+  object-fit: cover;
+  object-position: center;
+}
+
+footer {
+  margin-top: auto;
+  padding: 1em;
+}
+
+.guessedBox {
+  position: absolute;
+  border: 2px solid green;
+  box-sizing: border-box;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  font-weight: 500;
+  border-radius: 15px;
+  background-color: rgba(0, 255, 0, 0.15);
+}
+
+.fullScreenAlpha {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.modal {
+  display: flex;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  background-color: #242424;
+  padding: 2em;
+
+  border-radius: 15px;
+  box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.5);
+  
+
+
+}
+
+

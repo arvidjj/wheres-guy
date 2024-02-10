@@ -42,24 +42,14 @@ router.post('/validate', async function (req, res, next) {
       if (image.character[index] === character) {
         hasDoneIt = true;
 
-        // if the user has already guessed all the characters on the image
-        if (foundSession.guessedCharacters === image.character.length) {
-          return res.json({ message: 'Already finished' })
-        }
-
         // Update the score session and calculate elapsed time
-         const foundSession = await ScoreSession.findOneAndUpdate({ _id: sessionScoreId }, { $inc: { guessedCharacters: 1 } }, { new: true })
-          .then(() => {
-          })
-          .catch((err) => {
-            console.error('Error updating score session:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-          });
+         const foundSession = await ScoreSession.findOneAndUpdate({ _id: sessionScoreId }, { $inc: { guessedCharacters: 1 } }, { new: true });
 
         //if he guessed all the characters on the image
         if (foundSession.guessedCharacters === image.character.length) {
           const elapsedTime = new Date() - foundSession.servedAt;
-          ScoreSession.findOneAndUpdate({ _id: sessionScoreId }, { elapsedTime: elapsedTime })
+          console.log("Elapsed time: " + elapsedTime);
+          await ScoreSession.updateOne({ _id: sessionScoreId },  {$set: {"elapsedTime": elapsedTime}} )
           return res.json({ message: 'true', character: character, elapsedTime: elapsedTime });
         }
 

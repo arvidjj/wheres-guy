@@ -27,6 +27,7 @@ const Game = () => {
     const [finishedTime, setFinishedTime] = useState('');
 
     const [showWinModal, setShowWinModal] = useState(false);
+    const [isLoadingScore, setIsLoadingScore] = useState(false);
 
     const createClickBox = (position, character) => {
 
@@ -170,7 +171,7 @@ const Game = () => {
                 setCharacters(response.data.image.character);
                 setClickLocation(response.data.image.clickLocation);
                 setHitboxSize(response.data.image.hitboxSize);
-                
+
                 setSessionScoreId(response.data.sessionId);
             } else {
                 console.error('Failed to fetch image from the backend');
@@ -180,50 +181,83 @@ const Game = () => {
         }
     };
 
+    const sendScore = async (name) => {
+        if (!name) {
+            return;
+        }
+
+        if (isLoadingScore) {
+            return;
+        }
+
+
+        const scoreData = {
+            sessionScoreId: sessionScoreId,
+            username: name,
+        };
+
+        try {
+            setIsLoadingScore(true);
+            const response = await apiInstance.post('/score', scoreData);
+            console.log(response.data);
+            setShowWinModal(false);
+            setIsLoadingScore(false);
+        } catch (error) {
+            console.error('Error sending score:', error);
+            setIsLoadingScore(false);
+        }
+    }
+
 
 
     return (
-        <div className="game-container">
-            <h1>Find the Character!</h1>
+        <>
+        <h1 className='mt-10'>Find the Character!</h1>
+            <div className="game-container flex flex-col mt-12">
+                
 
-            <div>
-                <p>{newsFeedText}</p>
-                <p>Characters Guessed: {guessedCharacters.length}/{characters.length}<br></br>
-                    {guessedCharacters.join(', ')}</p>
-            </div>
+                {hasStarted && (<div>
+                    <p>{newsFeedText}</p>
+                    <p>Characters Guessed: {guessedCharacters.length}/{characters.length}<br></br>
+                        {guessedCharacters.join(', ')}</p>
+                </div>)}
+                <div style={{ position: 'relative' }} id="imageDiv">
+                    {hasStarted && <img
+                        src={imageSrc}
+                        alt="Find the Character"
+                        onClick={handleClick}
+                        className={hasWon ? 'won mainimage' : 'mainimage'}
+                    />}
 
-            {!hasStarted && <button onClick={handleStartGame}>Start Game</button>}
-
-            <div style={{ position: 'relative' }} id="imageDiv">
-                {hasStarted && <img
-                    src={imageSrc}
-                    alt="Find the Character"
-                    onClick={handleClick}
-                    className={hasWon ? 'won mainimage' : 'mainimage'}
-                />}
-
-                {clickBox}
-                {guessedSquares.map((square) => square)}
-            </div>
-
-            {hasStarted && (
-                <div>
-                    <button onClick={resetGame}>Play Again</button>
+                    {clickBox}
+                    {guessedSquares.map((square) => square)}
                 </div>
+
+                {hasStarted && (
+                    <div>
+                        <button onClick={resetGame}>Play Again</button>
+                    </div>
+                )}
+
+
+
+            </div>
+            {!hasStarted && <div className=''><button onClick={handleStartGame}>Start Game</button></div>}
+            {showWinModal && (
+                <>
+                    <WinGameModal
+                        elapsedTime={finishedTime}
+                        onSendName={(name) => {
+                            sendScore(name);
+                        }}
+                        isLoading={isLoadingScore}
+                    />
+                    <div className='fullScreenAlpha'></div>
+                </>
             )}
 
-            {showWinModal && (
-                <WinGameModal
-                    elapsedTime={finishedTime}
-                    onSendName={(name) => {
-                        console.log(name);
-                        setShowWinModal(false);
-                    }}
-                />
-            )}
-            
-        </div>
-    );
+        </>
+    )
 };
 
 export default Game;
