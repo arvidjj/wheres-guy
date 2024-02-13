@@ -29,6 +29,9 @@ const Game = () => {
     const [showWinModal, setShowWinModal] = useState(false);
     const [isLoadingScore, setIsLoadingScore] = useState(false);
 
+    const [rankings, setRankings] = useState([]);
+    const [loadingRanks, setLoadingRanks] = useState(false);
+
     const createClickBox = (position, character) => {
 
         return (
@@ -152,6 +155,10 @@ const Game = () => {
         setNewsFeedText('');
         setIsValidatingSelection(false);
         setGuessedCharacters([]);
+        setGuessedSquares([]);
+        setSessionScoreId('');
+
+        fetchImage();
     };
 
     const handleStartGame = () => {
@@ -178,6 +185,24 @@ const Game = () => {
             }
         } catch (error) {
             console.error('Error fetching image:', error);
+        }
+    };
+
+    const fetchScoreBoard = async () => {
+        try {
+            setLoadingRanks(true);
+            const response = await apiInstance.get(`/score/image/${imageId}`);
+            if (response.status === 200) {
+                setRankings(response.data);
+
+            } else {
+                console.error('Failed to fetch rankings from the backend');
+            }
+            setLoadingRanks(false);
+        } catch (error) {
+
+            console.error('Error fetching rankings:', error);
+            setLoadingRanks(false);
         }
     };
 
@@ -208,41 +233,71 @@ const Game = () => {
         }
     }
 
+    const formatTime = (time) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        return `${minutes}m : ${seconds}s`;
+    }
 
 
     return (
-        <>
-        <h1 className='mt-10'>Find the Character!</h1>
-            <div className="game-container flex flex-col mt-12">
-                
-
-                {hasStarted && (<div>
-                    <p>{newsFeedText}</p>
-                    <p>Characters Guessed: {guessedCharacters.length}/{characters.length}<br></br>
-                        {guessedCharacters.join(', ')}</p>
-                </div>)}
-                <div style={{ position: 'relative' }} id="imageDiv">
-                    {hasStarted && <img
-                        src={imageSrc}
-                        alt="Find the Character"
-                        onClick={handleClick}
-                        className={hasWon ? 'won mainimage' : 'mainimage'}
-                    />}
-
-                    {clickBox}
-                    {guessedSquares.map((square) => square)}
-                </div>
-
-                {hasStarted && (
-                    <div>
-                        <button onClick={resetGame}>Play Again</button>
+        <div className='flex gap-5'>
+            <div>
+                <h1 className='mt-10'>Find the Characters!</h1>
+                <div className="game-container flex flex-col mt-12 gap-8">
+                    {characters.length > 0 && (<div className='p-3 bg-purple-950 rounded-lg flex justify-center gap-2'>
+                        <h2 className=''>Characters to find:</h2>
+                        <ul className='mr-10 list-disc px-10 items-start flex flex-col justify-start'>
+                            {characters.map((char) => (
+                                <li key={char}>{char}</li>
+                            ))}
+                        </ul>
+                    </div>)}
+                    {hasStarted && (<div>
+                        <p>{newsFeedText}</p>
+                        <p>Characters Guessed: {guessedCharacters.length}/{characters.length}<br></br>
+                            {guessedCharacters.join(', ')}</p>
+                    </div>)}
+                    <div style={{ position: 'relative' }} id="imageDiv">
+                        {hasStarted && <img
+                            src={imageSrc}
+                            alt="Find the Character"
+                            onClick={handleClick}
+                            className={hasWon ? 'won mainimage' : 'mainimage'}
+                        />}
+                        {clickBox}
+                        {guessedSquares.map((square) => square)}
                     </div>
+                    {hasStarted && hasWon && (
+                        <div>
+                            <button onClick={resetGame}>Play Again</button>
+                        </div>
+                    )}
+                </div>
+                {!hasStarted && <div className=''><button onClick={handleStartGame}>Start Game</button></div>}
+            </div>
+
+            <div className=' p-10 flex flex-col gap-5 border rounded-xl border-gray-500'>
+                {(imageId) && (
+                    <>
+                        <p>Rankings for this image:</p>
+                        {rankings.length > 0 && (
+                        <ul className=' list-decimal'>
+                            {rankings.map((rank, index) => (
+                                <li key={index}>
+                                    {rank.username} - {formatTime(rank.score)}
+                                </li>
+                            ))}
+                        </ul>
+                        )}
+                    </>
                 )}
 
-
+                {(loadingRanks && imageId) ? <p>Loading rankings...</p> : null}
+                {(!loadingRanks && imageId) ? <button onClick={fetchScoreBoard}>Load Ranks</button> : null}
 
             </div>
-            {!hasStarted && <div className=''><button onClick={handleStartGame}>Start Game</button></div>}
+
             {showWinModal && (
                 <>
                     <WinGameModal
@@ -256,7 +311,7 @@ const Game = () => {
                 </>
             )}
 
-        </>
+        </div>
     )
 };
 

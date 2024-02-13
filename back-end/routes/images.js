@@ -29,7 +29,6 @@ router.get('/random', async (req, res) => {
     if (!randomImage || randomImage.length === 0) {
       return res.status(404).json({ error: 'No random image found' });
     }
-
     // Create a new score session for the random image
     const newSession = await ScoreSession.create({ image: randomImage[0]._id, guessedCharacters: 0, servedAt: new Date()
     , elapsedTime: 0});
@@ -91,7 +90,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     await image.save();
 
     await sharp(req.file.buffer).
-      resize(750).
+      resize(1000).
       toFile('./public/images/' + imageName);
 
     return res.status(200).json({ imageUrl: '/images/' + imageName });

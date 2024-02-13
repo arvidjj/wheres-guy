@@ -9,7 +9,6 @@ const scoreSession = new Schema({
         required: true
     },
     guessedCharacters: {
-        //integer
         type: Number,
         required: true
     },

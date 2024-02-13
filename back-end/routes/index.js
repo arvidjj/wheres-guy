@@ -47,7 +47,8 @@ router.post('/validate', async function (req, res, next) {
 
         //if he guessed all the characters on the image
         if (foundSession.guessedCharacters === image.character.length) {
-          const elapsedTime = new Date() - foundSession.servedAt;
+          //get how many time has passed since he won
+          const elapsedTime = (new Date() - foundSession.servedAt) / 1000;
           console.log("Elapsed time: " + elapsedTime);
           await ScoreSession.updateOne({ _id: sessionScoreId },  {$set: {"elapsedTime": elapsedTime}} )
           return res.json({ message: 'true', character: character, elapsedTime: elapsedTime });

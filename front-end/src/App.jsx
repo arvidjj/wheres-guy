@@ -9,9 +9,7 @@ function App() {
   return (
     <>
       <div className='flex justify-center'>
-        <a href="" target="_blank" style={{display:'flex', flexDirection:'row'}}> 
           <h1>Where's this guy</h1>
-        </a>
       </div>
       
       <div className="body">

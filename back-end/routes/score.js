@@ -3,6 +3,13 @@ var router = express.Router();
 var ScoreSession = require('../models/scoresession');
 const UserScore = require('../models/userscore');
 
+router.get('/image/:id', async function (req, res, next) {
+    //get all scores of this image
+    const imageId = req.params.id;
+    let foundScores = await UserScore.find({ imageId: imageId }).sort({ score: -1 });
+    return res.json(foundScores);
+});
+
 /* GET users listing. */
 router.post('/', async function (req, res, next) {
     const sessionScoreId = req.body.sessionScoreId;
